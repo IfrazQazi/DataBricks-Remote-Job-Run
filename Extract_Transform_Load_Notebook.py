@@ -28,3 +28,35 @@ import pandas as pd
 # MAGIC curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
 # MAGIC apt-get update
 # MAGIC ACCEPT_EULA=Y apt-get install msodbcsql17
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### Now lets connect with SQL Server to get the source data
+
+# COMMAND ----------
+
+# Some other example server values are
+# server = 'myserver,port' # to specify an alternate port
+server = 'tcp:learning-uc-ssvr.database.windows.net' 
+database = 'learning-uc-dbs' 
+username = 'ifraz' #user
+password = "#######" #Enter your Password 
+# ENCRYPT defaults to yes starting in ODBC Driver 17. It's good to always specify ENCRYPT=yes on the client side to avoid MITM attacks.
+
+cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+';DATABASE='+database+';ENCRYPT=yes;UID='+username+';PWD='+ password)
+
+# COMMAND ----------
+
+## converting sql db to pandas df
+df = pd.read_sql("select *  from dbo.ajiofashion", cnxn)
+
+# COMMAND ----------
+
+# lets check the data
+df.head()
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC ##### we successfully loaded data and created DataFrame
