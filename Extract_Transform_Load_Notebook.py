@@ -60,3 +60,47 @@ df.head()
 
 # MAGIC %md 
 # MAGIC ##### we successfully loaded data and created DataFrame
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### lets create DDLs for data validation
+# MAGIC ##### Creating Data Definition Language (DDL) statements in Databricks allows you to have more control and flexibility over the structure and properties of your SQL tables. While you can directly convert data into SQL tables in Databricks using DataFrame APIs, using DDLs provides several benefits:
+# MAGIC
+# MAGIC * Table Structure and Data Types: DDLs allow you to explicitly define the structure of your SQL table, including column names, data types, constraints, and indexes. This ensures consistency and accuracy in the schema of the table.
+# MAGIC
+# MAGIC * Data Validation and Transformation: DDLs provide the opportunity to validate and transform your data before it is loaded into the SQL table. You can perform data cleansing, type casting, and other transformations to ensure the data is of the desired quality.
+# MAGIC
+# MAGIC * Control Over Storage Properties: With DDLs, you can specify storage-related properties such as file format, compression, partitioning, and clustering. This enables you to optimize data storage and query performance based on your specific use case.
+# MAGIC
+# MAGIC * Data Partitioning: DDLs allow you to define how the data should be partitioned in the SQL table. Partitioning can significantly improve query performance, especially when dealing with large datasets.
+# MAGIC
+# MAGIC * Schema Evolution: Using DDLs, you can easily modify the schema of your SQL tables over time without affecting the data. This is particularly useful when you need to add new columns, change data types, or update constraints.
+# MAGIC
+# MAGIC * Customization: DDLs provide a way to customize table properties and behavior that may not be available through direct DataFrame-to-table conversion.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### But Before creating DDL we have to connect with the storage location(adls gen2)
+# MAGIC ##### I am using Access Token you can use anything you want like (Service Principal,App Registration) 
+
+# COMMAND ----------
+
+spark.conf.set("fs.azure.account.key.adlsgen2strgaccnt.dfs.core.windows.net"
+               ,"b101lF9Dh5Vwp9vg2NT2UGdJjRnOhk2SH8o655wwOszpwraQaeOZpjO+Q/FTGFGwaDjWesvabRTm+AStO8i/ag==")
+
+
+# COMMAND ----------
+
+#lets check the container
+display(dbutils.fs.ls("abfss://populationadls@adlsgen2strgaccnt.dfs.core.windows.net/population/"))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##### Now we can use this location to store our data 
+
+# COMMAND ----------
+
+
