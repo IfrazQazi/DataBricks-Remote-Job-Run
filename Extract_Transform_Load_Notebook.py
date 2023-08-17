@@ -103,4 +103,90 @@ display(dbutils.fs.ls("abfss://populationadls@adlsgen2strgaccnt.dfs.core.windows
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ###### Below command is used to create new schema if its already present then you don't need to create it again
+
+# COMMAND ----------
+
+# %sql
+# Create SCHEMA ajio_detail
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ###### below command is to remove file or created table from the file path incase when you accedentaly created the incorrect table with column is not valid or some other changes you want to do with that table
+
+# COMMAND ----------
+
+# %fs
+# rm -r 'abfss://populationadls@adlsgen2strgaccnt.dfs.core.windows.net/population/ajio_fashion'
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ###### drop table command is used to drop table. # 
+# MAGIC ###### need to be careful when we use this command
+
+# COMMAND ----------
+
+# %sql
+# drop table ajio_detail.ajio_fashion
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##### i have created the ddl in the same notebook but you can create it in different notebook so that when you run entire notebook you don't have recreate the tables again. it will be store in to hive metastore
+# MAGIC ##### and if you try to recreate table without droping it than it will throw an error table is already present 
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC create table ajio_detail.ajio_fashion(
+# MAGIC Product_URL String,
+# MAGIC Brand String,
+# MAGIC Description String,
+# MAGIC Id_Product decimal(38,17),
+# MAGIC URL_image String,
+# MAGIC Category_by_gender String,
+# MAGIC Discount_Price_in_Rs int,
+# MAGIC Original_Price_in_Rs int,
+# MAGIC Color String
+# MAGIC )
+# MAGIC using parquet
+# MAGIC location "abfss://populationadls@adlsgen2strgaccnt.dfs.core.windows.net/population/ajio_fashion"
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##### above i have use parquet to store the data into the parquet format you can also use json,and delta or other formats.
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC -- drop table ajio_detail.fact_ajio_fashion 
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC create table ajio_detail.fact_ajio_fashion(
+# MAGIC Product_URL_Id String,
+# MAGIC Brand_Name String,
+# MAGIC Description String,
+# MAGIC Product_Id decimal(38,17),
+# MAGIC URL_image String,
+# MAGIC Category_By_Gender_Name String,
+# MAGIC Discount_Price_In_Rs_Amount int,
+# MAGIC Original_Price_In_Rs_Amount int,
+# MAGIC Color_Name String
+# MAGIC )
+# MAGIC using delta
+# MAGIC location "abfss://populationadls@adlsgen2strgaccnt.dfs.core.windows.net/population/fact_ajio_fashion"
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##### as we seen ealier we can use any format so here i have used the delta format. It is ok to use defferent format it depends on the requirements of the project.
+
+# COMMAND ----------
+
 
