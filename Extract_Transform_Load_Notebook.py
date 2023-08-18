@@ -41,7 +41,7 @@ import pandas as pd
 server = 'tcp:learning-uc-ssvr.database.windows.net' 
 database = 'learning-uc-dbs' 
 username = 'ifraz' #user
-password = "#######" #Enter your Password 
+password = '######' #Enter your Password 
 # ENCRYPT defaults to yes starting in ODBC Driver 17. It's good to always specify ENCRYPT=yes on the client side to avoid MITM attacks.
 
 cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+';DATABASE='+database+';ENCRYPT=yes;UID='+username+';PWD='+ password)
@@ -189,4 +189,116 @@ display(dbutils.fs.ls("abfss://populationadls@adlsgen2strgaccnt.dfs.core.windows
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ##### lets create spark dataframe from pandas dataframe
 
+# COMMAND ----------
+
+sql_table=spark.createDataFrame(df)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##### now lets create Temporary View so that we can move data from temporary View to loading table
+
+# COMMAND ----------
+
+sql_table.createOrReplaceTempView("temp_sql_table")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ###### lets load the data from View to Loading table
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC insert into ajio_detail.ajio_fashion SELECT DISTINCT * FROM temp_sql_table;
+# MAGIC Drop View temp_sql_table;
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC ##### in above insert query i have selected only distinct value from temp_sql_table(Temporary View) so that i will not load duplicate rows to loading table
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC #### Lets now create Update insert Query or Incremental query for our target table
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TEMP VIEW ajio_fashion_tempV (  --- Creating Temporary View which containt non duplicated rows from loading table
+# MAGIC     Product_URL,      
+# MAGIC        Brand,
+# MAGIC        Description,
+# MAGIC        Id_Product ,
+# MAGIC        URL_image,
+# MAGIC        Category_by_gender,
+# MAGIC        Discount_Price_in_Rs,
+# MAGIC        Original_Price_in_Rs,
+# MAGIC        Color
+# MAGIC ) AS
+# MAGIC SELECT Distinct Product_URL,
+# MAGIC        Brand,
+# MAGIC        Description,
+# MAGIC        Id_Product ,
+# MAGIC        URL_image,
+# MAGIC        Category_by_gender,
+# MAGIC        Discount_Price_in_Rs,
+# MAGIC        Original_Price_in_Rs,
+# MAGIC        Color
+# MAGIC FROM ajio_detail.ajio_fashion;
+# MAGIC --- Now lets create Merge query 
+# MAGIC MERGE INTO ajio_detail.fact_ajio_fashion AS target
+# MAGIC USING ajio_fashion_tempV AS source
+# MAGIC ON target.URL_image = source.URL_image  -- this column containt unique values so i am using to match the columns
+# MAGIC WHEN MATCHED THEN UPDATE                -- If values are matching than it will just update the table with new value
+# MAGIC   SET target.Product_URL_Id = source.Product_URL,
+# MAGIC       target.Brand_Name = source.Brand,
+# MAGIC       target.Description = source.Description,
+# MAGIC       target.Product_Id = source.Id_Product,
+# MAGIC       target.URL_image = source.URL_image,
+# MAGIC       target.Category_By_Gender_Name = source.Category_by_gender,
+# MAGIC       target.Discount_Price_In_Rs_Amount = source.Discount_Price_in_Rs,
+# MAGIC       target.Original_Price_In_Rs_Amount = source.Original_Price_in_Rs,
+# MAGIC       target.Color_Name = source.Color
+# MAGIC                                             -- If it doesn't match than it will just add it into the table
+# MAGIC WHEN NOT MATCHED THEN INSERT (Product_URL_Id,
+# MAGIC                               Brand_Name,
+# MAGIC                               Description,
+# MAGIC                               Product_Id,
+# MAGIC                               URL_image,
+# MAGIC                               Category_By_Gender_Name,
+# MAGIC                               Discount_Price_In_Rs_Amount ,
+# MAGIC                               Original_Price_In_Rs_Amount ,
+# MAGIC                               Color_Name)
+# MAGIC   VALUES (source.Product_URL,
+# MAGIC           source.Brand,
+# MAGIC           source.Description,
+# MAGIC           source.Id_Product,
+# MAGIC           source.URL_image,
+# MAGIC           source.Category_by_gender,
+# MAGIC           source.Discount_Price_in_Rs,
+# MAGIC           source.Original_Price_in_Rs,
+# MAGIC           source.Color);
+# MAGIC Drop VIEW ajio_fashion_tempV;
+# MAGIC SELECT COUNT(*) FROM ajio_detail.fact_ajio_fashion; -- This will display the count after duplicates are removed
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #### so now we have done process from loading data from source to loading and performing tarnsformation on it.
+# MAGIC ###### now this data is ready to push into the final target table. 
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select count(*) from ajio_detail.fact_ajio_fashion
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC drop table ajio_detail.fact_ajio_fashion
